@@ -2,7 +2,7 @@
 
 (defun d (n) (1+ (random n)))
 
-(defun deathp (sit attack damdie)
+(defun deathp (sit attack damdie no-save)
   (let* ((mult (if (= attack (sit-av sit)) 2 1))
 	 (crittable (if (and (= mult 2)
 			     (= damdie 1))
@@ -19,14 +19,15 @@
 		     0)))
     (or (= crittable 20)
 	(and (<= (- (sit-hp sit) damage) -2)        
-	     (or (> (d 20) (sit-save sit))
+	     (or no-save
+		 (> (d 20) (sit-save sit))
 		 (<= (- (+ (sit-hp sit) (d 6))
 			damage)
 		     -2))
 	     (> (d 20) (sit-save sit))))))
 
-(defun death-risk (sit &key (times 10000000) (damsides 6))
-  (float (/ (loop repeat times sum (if (deathp sit (d 20) (d damsides))
+(defun death-risk (sit &key (times 10000000) (damsides 6) (no-save))
+  (float (/ (loop repeat times sum (if (deathp sit (d 20) (d damsides) no-save)
 				       1 
 				       0)) 
 	    times)))
