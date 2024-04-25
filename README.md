@@ -2,7 +2,7 @@
 Calculate the risk of your character dying from an attack in Whitehack RPG.
 
 ```
-(load "death-risk.lisp")
+(load "~/death-risk.lisp")
 (make-sit :av 11 :df 1 :hp 1 :dammod 1 :save 11)
 (death-risk *)
 ==> 0.1265345
