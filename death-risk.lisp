@@ -75,11 +75,11 @@
 	      ((= outcome -100) (incf die))
 	      ((zerop outcome) (incf knocked-out))
 	      (t (incf injured)))))
-    (flet ((rep (effect value)
-	     (list effect (/ (round (* 10000 (float (/ value times))))
-			     100.0))))
-      (mapcar #'rep 
-	      '(still-in-action just-knocked-out also-injured dead)
-	      (list live knocked-out injured die)))))
+    (mapcar #'(lambda (e v)
+		(list e (/ (round (* 10000 
+				     (float (/ v times)))) 
+			   100.0)))
+	    '(still-in-action just-knocked-out also-injured dead)
+	    (list live knocked-out injured die))))
 
 	  
