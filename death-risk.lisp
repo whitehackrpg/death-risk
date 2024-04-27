@@ -79,7 +79,7 @@
 	     (list effect (/ (round (* 10000 (float (/ value times))))
 			     100.0))))
       (values (rep 'still-in-action live)
-	      (rep 'knocked-out knocked-out)
-	      (rep 'injured injured)
+	      (rep 'just-knocked-out knocked-out)
+	      (rep 'also-injured injured)
 	      (rep 'dead die)))))
 	  
