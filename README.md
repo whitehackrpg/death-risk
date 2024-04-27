@@ -11,4 +11,4 @@ Calculate the risk of your character dying from an attack in Whitehack RPG. It's
 (ALSO-INJURED 21.9)
 (DEAD 13.24)
 ```
-There is roughly 13% risk of dying for a Tgh 11 character with 1 HP and wearing cloth armor, if attacked by a HD 1 enemy using a sword. Call `death-risk` with `:damsides 10` to check against an attack based on a d10 damage die. Call it with `:no-save t` to see the risk when you have already used your save vs. damage.
+There is roughly 13% risk of dying for a Tgh 11 character with 1 HP and wearing cloth armor, if attacked by a HD 1 enemy using a sword. Call `death-risk` with `:damsides 10` to check against an attack based on a d10 damage die. Call it with `:no-save t` to see the risk when you have already used your save vs. damage. There are some extra posts in the situation struct that you can give as well, to handle double rolls and boss fights. See the definition of the struct in the code.
