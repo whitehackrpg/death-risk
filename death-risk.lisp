@@ -1,82 +1,33 @@
-(defstruct sit 
-  av           ; attacker's attack value 
-  (avkind 0)   ; 0 = regular roll, 1 = double+, -1 = double-
-  df           ; defender's defense value
-  hp           ; defendier's harm points
-  (dammod 0)   ; modification to the damage die
-  save         ; save value, highest of defender's SV and Tgh
-  (savekind 0) ; 0 = regular roll, 1 = double+, -1 = double-
-  (boss 0))    ; 0 = no bossfight, 1 = bossfight
-
-(defun success (target defense dieroll)
-  (cond ((= target dieroll) 2)
-	((< defense dieroll (1+ target)) 1)
-	(t 0)))
-
-(defun roll (target defense kind)
-  (if (zerop kind)
-      (success target defense (d 20))
-      (funcall (if (minusp kind)
-		   #'min 
-		   #'max) 
-	       (success target defense (d 20))
-	       (success target defense (d 20)))))
-
-(defun damage (sit damdie)
-  (let ((mult (roll (sit-av sit) (sit-df sit) (sit-avkind sit))))
-    (unless (zerop mult)
-      (let ((crittable (if (and (= mult 2)
-				(<= damdie (+ 1 (sit-boss sit))))
-			   (d 20)
-			   0))
-	    (raw (+ damdie (sit-dammod sit))))
-      (values (+ (if (plusp raw)
-		     (* raw mult)
-		     mult)
-		 (if (= crittable 14)
-		     (d 6)
-		     0))
-	      crittable)))))
+(defstruct sit av df hp dammod save)
 
 (defun d (n) (1+ (random n)))
 
-(defun result (sit damdie no-save)
-  (multiple-value-bind (damage crittable) (damage sit damdie)
-    (cond ((null damage) 100)
-	  ((= crittable 20) -100)
-	  (t (let ((rem-hp (+ (- (sit-hp sit) damage)
-			      (if (or no-save 
-				      (zerop (roll (sit-save sit)
-						   0
-						   (sit-savekind sit))))
-				  0
-				  (d 6)))))
-	       (cond ((<= rem-hp -10) -100)
-		     ((<= rem-hp -2)
-		      (if (zerop (roll (sit-save sit)
-					 0
-					 (sit-savekind sit)))
-			  -100
-			  (if (zerop (sit-boss sit))
-			      1
-			      100)))
-		     (t rem-hp)))))))
-		   
+(defun deathp (sit attack damdie no-save)
+  (let* ((mult (if (= attack (sit-av sit)) 2 1))
+	 (crittable (if (and (= mult 2)
+			     (= damdie 1))
+			(d 20)
+			0))
+	 (damage (if (< (sit-df sit) attack (1+ (sit-av sit)))
+		     (let* ((raw (+ damdie (sit-dammod sit)))
+			    (regular (if (plusp raw)
+					 (* raw mult)
+					 mult)))
+		       (if (= crittable 14)
+			   (+ regular (d 6))
+			   regular))
+		     0)))
+    (or (= crittable 20)
+	(and (<= (- (sit-hp sit) damage) -2)        
+	     (or no-save
+		 (> (d 20) (sit-save sit))
+		 (<= (- (+ (sit-hp sit) (d 6))
+			damage)
+		     -2))
+	     (> (d 20) (sit-save sit))))))
+
 (defun death-risk (sit &key (times 10000000) (damsides 6) (no-save))
-  (let ((live 0)
-	(die 0)
-	(knocked-out 0)
-	(injured 0))
-  (loop repeat times do
-	(case (result sit (d damsides) no-save)
-	  (100 (incf live))
-	  (-100 (incf die))
-	  ((0 -1) (incf knocked-out))
-	  (t (incf injured))))
-    (flet ((rep (effect value)
-	     (list effect (/ (round (* 1000 (float (/ value times)))) 10.0))))
-      (values (rep 'still-in-action live)
-	      (rep 'knocked-out knocked-out)
-	      (rep 'injured injured)
-	      (rep 'dead die)))))
-	  
+  (float (/ (loop repeat times sum (if (deathp sit (d 20) (d damsides) no-save)
+				       1 
+				       0)) 
+	    times)))
