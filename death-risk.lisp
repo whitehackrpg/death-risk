@@ -73,13 +73,13 @@
       (let ((outcome (result sit (d damsides) no-save)))
 	(cond ((plusp outcome) (incf live))
 	      ((= outcome -100) (incf die))
-	      ((= outcome 0) (incf knocked-out))
+	      ((zerop outcome) (incf knocked-out))
 	      (t (incf injured)))))
     (flet ((rep (effect value)
 	     (list effect (/ (round (* 10000 (float (/ value times))))
 			     100.0))))
-      (values (rep 'still-in-action live)
-	      (rep 'just-knocked-out knocked-out)
-	      (rep 'also-injured injured)
-	      (rep 'dead die)))))
+      (mapcar #'rep 
+	      '(still-in-action just-knocked-out also-injured dead)
+	      (list live knocked-out injured die)))))
+
 	  
